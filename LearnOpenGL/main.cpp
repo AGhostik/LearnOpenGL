@@ -84,6 +84,39 @@ GLuint _createShaderProgram(GLuint shaders[], int arraySize) {
 	return shaderProgram;
 }
 
+GLuint _shaders() {
+	_log("Commencing shader compile");	
+	const char *vertexShaderSource = 
+		"#version 330 core\n"
+		"layout (location = 0) in vec3 position;\n"
+		"void main() {\n"
+		"gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
+		"}";
+	GLuint vertexShader = _createVertexShader(vertexShaderSource);
+		
+	const char *fragmentShaderSource = 
+		"#version 330 core\n"
+		"out vec4 color;\n"
+		"void main() {\n"
+		"color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+		"}";
+	GLuint fragmentShader = _createFragmentShader(fragmentShaderSource);
+	
+	GLuint shaders[] = {
+		vertexShader, fragmentShader
+	};
+
+	GLuint shaderProgram = _createShaderProgram(shaders, 2);
+
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+
+	glUseProgram(shaderProgram);
+	_log("Shader compile complete");
+
+	return shaderProgram;
+}
+
 void _draw(GLuint vao, GLuint shaderProgram) {
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -91,7 +124,9 @@ void _draw(GLuint vao, GLuint shaderProgram) {
 	glUseProgram(shaderProgram); 
 	glBindVertexArray(vao); 
 
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	//без EBO
+	//glDrawArrays(GL_TRIANGLES, 0, 3);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 	glBindVertexArray(0);
 }
@@ -129,59 +164,50 @@ int main() {
 	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);  
 	glViewport(0, 0, width, height);
-	
-	_log("Commencing shader compile");	
-	const char *vertexShaderSource = 
-		"#version 330 core\n"
-		"layout (location = 0) in vec3 position;\n"
-		"void main() {\n"
-		"gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
-		"}";
-	GLuint vertexShader = _createVertexShader(vertexShaderSource);
 		
-	const char *fragmentShaderSource = 
-		"#version 330 core\n"
-		"out vec4 color;\n"
-		"void main() {\n"
-		"color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-		"}";
-	GLuint fragmentShader = _createFragmentShader(fragmentShaderSource);
-	
-	GLuint shaders[] = {
-		vertexShader, fragmentShader
+	GLfloat vertices[] = {
+		0.5f,  0.5f, 0.0f,  // Верхний правый угол
+		0.5f, -0.5f, 0.0f,  // Нижний правый угол
+		-0.5f, -0.5f, 0.0f,  // Нижний левый угол
+		-0.5f,  0.5f, 0.0f   // Верхний левый угол
 	};
-
-	GLuint shaderProgram = _createShaderProgram(shaders, 2);
-
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-
-	glUseProgram(shaderProgram);
-	_log("Shader compile complete");
-
+	GLuint indices[] = {  // Помните, что мы начинаем с 0!
+		0, 1, 3,   // Первый треугольник
+		1, 2, 3    // Второй треугольник
+	};
+	
 	GLuint VBO;
 	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-	GLfloat vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		 0.5f, -0.5f, 0.0f,
-		 0.0f,  0.5f, 0.0f
-	};
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	GLuint IBO;
+	glGenBuffers(1, &IBO);	
 
 	GLuint VAO;
 	glGenVertexArrays(1, &VAO);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
 	// 1. Привязываем VAO
 	glBindVertexArray(VAO);
 	// 2. Копируем наш массив вершин в буфер для OpenGL
 	glBindBuffer(GL_ARRAY_BUFFER, VBO); 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); 
-	// 3. Устанавливаем указатели на вершинные атрибуты 
+	// 3. Копируем наши индексы в в буфер для OpenGL
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); 
+	// 4. Устанавливаем указатели на вершинные атрибуты 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0); 
-	//4. Отвязываем VAO
+	// 5. Отвязываем VAO
 	glBindVertexArray(0); 
+		
+	GLuint shaderProgram = _shaders();
+
+	//режим wireframe
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	//нормальный режим
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	_log("Commencing");
 
