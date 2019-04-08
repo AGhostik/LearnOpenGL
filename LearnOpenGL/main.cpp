@@ -33,9 +33,9 @@ const char* _readFile(const char* path) {
 	return memblock;
 }
 
-static void _log(const char* message) {
+static void _log(string message) {
 	#if _DEBUG
-	std::cout << message << std::endl;
+	cout << message << endl;
 	#endif
 }
 
@@ -46,46 +46,32 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	}
 }
 
-GLuint _createVertexShader(const char* shaderSource) {
+GLuint _createShader(const char* shaderSourceCode, int shaderType) {
 	GLint success;
-	GLchar infoLog[512];
 
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);	
-	glShaderSource(vertexShader, 1, &shaderSource, NULL);
-	glCompileShader(vertexShader);	
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+	GLuint shader = glCreateShader(shaderType);	
+	glShaderSource(shader, 1, &shaderSourceCode, NULL);
+	glCompileShader(shader);	
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+
+	string message;
 
 	if(!success) {
-		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-		_log("Shader _vertex_ compilation - failed");
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;		
+		const int logSize = 512;
+		GLchar infoLog[logSize];
+
+		glGetShaderInfoLog(shader, logSize, NULL, infoLog);
+
+		message = "Shader compilation - failed\n";
+		message += infoLog;
+		_log(message);
 	}
 	else {
-		_log("Shader _vertex_ compilation - success");
+		message = "Shader compilation - success";
+		_log(message);
 	}
 
-	return vertexShader;
-}
-
-GLuint _createFragmentShader(const char* shaderSource) {
-	GLint success;
-	GLchar infoLog[512];
-
-	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);	
-	glShaderSource(fragmentShader, 1, &shaderSource, NULL);
-	glCompileShader(fragmentShader);	
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-
-	if(!success) {
-		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-		_log("Shader _fragment_ compilation - failed");
-		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;		
-	}
-	else {
-		_log("Shader _fragment_ compilation - success");
-	}
-
-	return fragmentShader;
+	return shader;
 }
 
 GLuint _createShaderProgram(GLuint shaders[], int arraySize) {
@@ -109,13 +95,13 @@ GLuint _createShaderProgram(GLuint shaders[], int arraySize) {
 }
 
 GLuint _shaders() {
-	_log("Commencing shader compile");
+	_log("Commencing shader program compile");
 
 	const char* vertexShaderSource = _readFile("shader1.vert");
-	GLuint vertexShader = _createVertexShader(vertexShaderSource);
+	GLuint vertexShader = _createShader(vertexShaderSource, GL_VERTEX_SHADER);
 		
 	const char *fragmentShaderSource = _readFile("shader2.frag");
-	GLuint fragmentShader = _createFragmentShader(fragmentShaderSource);
+	GLuint fragmentShader = _createShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
 	
 	GLuint shaders[] = {
 		vertexShader, fragmentShader
@@ -127,7 +113,7 @@ GLuint _shaders() {
 	glDeleteShader(fragmentShader);
 
 	glUseProgram(shaderProgram);
-	_log("Shader compile complete");
+	_log("Shader program compile complete");
 
 	return shaderProgram;
 }
