@@ -2,12 +2,36 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#if _DEBUG
+#include <fstream>
 #include <iostream>
-#endif
-#if !_DEBUG
+#include <string>
 #include <Windows.h>
-#endif
+
+using namespace std;
+
+const char* _readFile(const char* path) {
+	ifstream::pos_type size;
+	char * memblock;
+	string text;
+
+	// file read based on example in cplusplus.com tutorial
+	ifstream file (path, ios::in|ios::binary|ios::ate);
+	if (file.is_open())	{
+		size = file.tellg();
+		//fSize = (GLuint) size;
+		memblock = new char [1 + size];
+		file.seekg (0, ios::beg);
+		file.read (memblock, size);
+		file.close();
+		memblock[size] = '\0';
+		text.assign(memblock);
+	}
+	else {
+		return 0;
+	}
+
+	return memblock;
+}
 
 static void _log(const char* message) {
 	#if _DEBUG
@@ -85,21 +109,12 @@ GLuint _createShaderProgram(GLuint shaders[], int arraySize) {
 }
 
 GLuint _shaders() {
-	_log("Commencing shader compile");	
-	const char *vertexShaderSource = 
-		"#version 330 core\n"
-		"layout (location = 0) in vec3 position;\n"
-		"void main() {\n"
-		"gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
-		"}";
+	_log("Commencing shader compile");
+
+	const char* vertexShaderSource = _readFile("shader1.vert");
 	GLuint vertexShader = _createVertexShader(vertexShaderSource);
 		
-	const char *fragmentShaderSource = 
-		"#version 330 core\n"
-		"out vec4 color;\n"
-		"void main() {\n"
-		"color = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-		"}";
+	const char *fragmentShaderSource = _readFile("shader2.frag");
 	GLuint fragmentShader = _createFragmentShader(fragmentShaderSource);
 	
 	GLuint shaders[] = {
@@ -176,12 +191,15 @@ int main() {
 		1, 2, 3    // Второй треугольник
 	};
 	
+	//Vertex Buffer Objects
 	GLuint VBO;
 	glGenBuffers(1, &VBO);
 
+	//Index Buffer Objects
 	GLuint IBO;
 	glGenBuffers(1, &IBO);	
 
+	//Vertex Array Object
 	GLuint VAO;
 	glGenVertexArrays(1, &VAO);
 

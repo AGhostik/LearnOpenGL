@@ -14,12 +14,20 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Shaders">
-      <UniqueIdentifier>{e817a4ae-c47f-4c02-b17c-10b21c660bd1}</UniqueIdentifier>
+      <UniqueIdentifier>{7ba6abc1-26db-4205-9d4c-0986a268be26}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shader2.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shader1.vert">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
